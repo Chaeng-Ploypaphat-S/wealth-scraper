@@ -22,8 +22,15 @@ def scrape_website(url):
             
     else:
         print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
+        
+
+def read_trending():
+    with open('input_trending/data.csv', mode='r') as file:
+        stock_tickers = file.readlines()
+        for ticker in stock_tickers:
+            url = 'https://stockanalysis.com/stocks/' + ticker
+            scrape_website(url)
+
 
 if __name__ == "__main__":
-    # URL of the website to scrape
-    url = 'https://stockanalysis.com/stocks/pep/'
-    scrape_website(url)
+    read_trending()
