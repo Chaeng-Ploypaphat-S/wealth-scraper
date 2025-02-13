@@ -1,35 +1,45 @@
+import csv
+import logging
+import os
 import requests
 from bs4 import BeautifulSoup
 
-def scrape_website(url):
-    # Send a GET request to the website
+def scrape_website(stock_symbol):
+    url = 'https://stockanalysis.com/stocks/' + stock_symbol
     response = requests.get(url)
 
-    # Check if the request was successful
     if response.status_code == 200:
-        # Parse the HTML content of the page
         soup = BeautifulSoup(response.content, 'html.parser')
 
-        # Find all elements with the specified class
         class_name = "whitespace-nowrap px-0.5 py-[1px] text-left text-smaller font-semibold tiny:text-base xs:px-1 sm:py-2 sm:text-right sm:text-small"
         elements = soup.find_all(class_=class_name)
 
-        # Print the text of each element
         for element in elements:
-            text = element.get_text()
-            if text[0] == "$":
-                print('dividend: ', text)
+            specified_dividend = element.get_text()
+            if specified_dividend[0] == "$":
+                logging.info('%s: dividend: %s', stock_symbol, specified_dividend)
+                print('%s: dividend: %s' % (stock_symbol, specified_dividend))
             
     else:
-        print(f"Failed to retrieve the webpage. Status code: {response.status_code}")
+        logging.info("Failed to retrieve the webpage. Status code: %s", response.status_code)
         
 
 def read_trending():
-    with open('input_trending/data.csv', mode='r') as file:
-        stock_tickers = file.readlines()
+    current_dir = os.path.dirname(__file__)
+    parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+    file_path = os.path.join(parent_dir, 'data/dividend_input/data.csv')
+    
+    target_stocks = []
+    with open(file_path, mode='r', encoding='utf-8-sig') as file:
+        stock_tickers = csv.reader(file)
         for ticker in stock_tickers:
-            url = 'https://stockanalysis.com/stocks/' + ticker
-            scrape_website(url)
+            # Assume the 1st column contains the stock tickers
+            # Later, as the number of columns increase, we can add a loop to iterate over all columns
+            stock_symbol = ticker[0]
+            target_stocks.append(stock_symbol)
+            
+    for stock_symbol in target_stocks:
+        scrape_website(stock_symbol)
 
 
 if __name__ == "__main__":
